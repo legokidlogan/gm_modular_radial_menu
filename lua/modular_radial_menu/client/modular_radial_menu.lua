@@ -148,6 +148,8 @@ local getColorEff
                         menuPageInd = NUMBER (optional), -- The page to open when the choice is selected, if menu is used. nil to not force the page.
                     func = function( menu, pageInd, choiceInd ) end, -- A function to run when the choice is selected.
 
+                    template = TABLE (optional), -- If provided, will be used to get defaults for all parameters below, before checking the menu's defaults.
+
                     -- See the CHOICE_ vars of ModularRadialMenu.static.VARIABLE_DEFAULTS for more info. Colors are in HSV.
                     gradientEnabled = BOOLEAN (optional),
                     bandEnabled = BOOLEAN (optional),
@@ -1266,6 +1268,24 @@ editChoice = function(
         choiceBandColorHovered = menu._choiceBandColorHovered
         choiceNameColorUnhovered = menu._choiceNameColorUnhovered
         choiceNameColorHovered = menu._choiceNameColorHovered
+    end
+
+    local template = choice.template
+    if template then
+        local t
+
+        t = template.gradientEnabled
+        if t ~= nil then choiceGradientEnabled = t end
+
+        t = template.bandEnabled
+        if t ~= nil then choiceBandEnabled = t end
+
+        choiceGradientColorUnhovered = template.gradientColorUnhovered
+        choiceGradientColorHovered = template.gradientColorHovered
+        choiceBandColorUnhovered = template.bandColorUnhovered
+        choiceBandColorHovered = template.bandColorHovered
+        choiceNameColorUnhovered = template.nameColorUnhovered
+        choiceNameColorHovered = template.nameColorHovered
     end
 
     local realChoice = page[choiceInd]
