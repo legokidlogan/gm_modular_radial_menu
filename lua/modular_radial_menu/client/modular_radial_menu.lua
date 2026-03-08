@@ -1256,7 +1256,7 @@ editChoice = function(
         choiceNameColorHovered
     )
 
-    -- This is ugly and bad for maintenance, but great for performance.
+    -- This is terrible for maintenance, but great for performance. Likewise for a lot of the backend here...
     if choiceBandEnabled == nil then
         local menu = choiceGradientEnabled
 
