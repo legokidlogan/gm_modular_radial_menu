@@ -50,12 +50,12 @@ ModularRadialMenu.static.VARIABLE_DEFAULTS = {
     -- These can be changed per-instance, and can be overridden per each choice of each menu page.
     CHOICE_GRADIENT_ENABLED = true, -- Whether to use an alpha gradient for the choice background, instead of a solid color.
     CHOICE_BAND_ENABLED = true, -- Whether to draw solid background bands behind choice names.
-    CHOICE_GRADIENT_COLOR_UNHOVERED = Color( 180, 0.08, 0.19, 255 ), -- The color of the gradient when the choice is unhovered. Choice colors are in HSV.
-    CHOICE_GRADIENT_COLOR_HOVERED = Color( 180, 1, 1, 255 ), -- The color of the gradient when the choice is hovered.
-    CHOICE_BAND_COLOR_UNHOVERED = Color( 180, 0.08, 0.19, 255 ), -- The color of the band when the choice is unhovered.
-    CHOICE_BAND_COLOR_HOVERED = Color( 180, 1, 1, 255 ), -- The color of the band when the choice is hovered.
-    CHOICE_NAME_COLOR_UNHOVERED = Color( 0, 0, 1, 255 ), -- The color of the choice name when the choice is unhovered.
-    CHOICE_NAME_COLOR_HOVERED = Color( 0, 0, 1, 255 ), -- The color of the choice name when the choice is hovered.
+    CHOICE_GRADIENT_COLOR_UNHOVERED = { 180, 0.08, 0.19, 255 }, -- The color of the gradient when the choice is unhovered. Choice colors are in HSV.
+    CHOICE_GRADIENT_COLOR_HOVERED = { 180, 1, 1, 255 }, -- The color of the gradient when the choice is hovered.
+    CHOICE_BAND_COLOR_UNHOVERED = { 180, 0.08, 0.19, 255 }, -- The color of the band when the choice is unhovered.
+    CHOICE_BAND_COLOR_HOVERED = { 180, 1, 1, 255 }, -- The color of the band when the choice is hovered.
+    CHOICE_NAME_COLOR_UNHOVERED = { 0, 0, 1, 255 }, -- The color of the choice name when the choice is unhovered.
+    CHOICE_NAME_COLOR_HOVERED = { 0, 0, 1, 255 }, -- The color of the choice name when the choice is hovered.
 }
 
 
@@ -107,7 +107,7 @@ local matrCenter = Matrix()
 matrCenter:Translate( Vector( ScrW() / 2, ScrH() / 2, 0 ) )
 
 local destroyedFunc
-local cloneColor
+local cloneHSVA
 local applyVarOverrides
 local addPolyUser
 local removePolyUser
@@ -154,15 +154,15 @@ local getColorEff
 
                     template = TABLE (optional), -- If provided, will be used to get defaults for all parameters below, before checking the menu's defaults.
 
-                    -- See the CHOICE_ vars of ModularRadialMenu.static.VARIABLE_DEFAULTS for more info. Colors are in HSV.
+                    -- See the CHOICE_ vars of ModularRadialMenu.static.VARIABLE_DEFAULTS for more info. Colors are HSVA tables (0-360, 0-1, 0-1, 0-255).
                     gradientEnabled = BOOLEAN (optional),
                     bandEnabled = BOOLEAN (optional),
-                    gradientColorUnhovered = COLOR_HSV (optional),
-                    gradientColorHovered = COLOR_HSV (optional),
-                    bandColorUnhovered = COLOR_HSV (optional),
-                    bandColorHovered = COLOR_HSV (optional),
-                    nameColorUnhovered = COLOR_HSV (optional),
-                    nameColorHovered = COLOR_HSV (optional),
+                    gradientColorUnhovered = TABLE (optional),
+                    gradientColorHovered = TABLE (optional),
+                    bandColorUnhovered = TABLE (optional),
+                    bandColorHovered = TABLE (optional),
+                    nameColorUnhovered = TABLE (optional),
+                    nameColorHovered = TABLE (optional),
 
                     -- This function allows for extra rendering.
                     -- Drawing at 0,0 will result in drawing at the center of the menu/screen.
@@ -900,27 +900,27 @@ function MRM:IsChoiceBandEnabled()
 end
 
 function MRM:GetChoiceGradientColorUnhovered()
-    return cloneColor( self._choiceGradientColorUnhovered )
+    return cloneHSVA( self._choiceGradientColorUnhovered )
 end
 
 function MRM:GetChoiceGradientColorHovered()
-    return cloneColor( self._choiceGradientColorHovered )
+    return cloneHSVA( self._choiceGradientColorHovered )
 end
 
 function MRM:GetChoiceBandColorUnhovered()
-    return cloneColor( self._choiceBandColorUnhovered )
+    return cloneHSVA( self._choiceBandColorUnhovered )
 end
 
 function MRM:GetChoiceBandColorHovered()
-    return cloneColor( self._choiceBandColorHovered )
+    return cloneHSVA( self._choiceBandColorHovered )
 end
 
 function MRM:GetChoiceNameColorUnhovered()
-    return cloneColor( self._choiceNameColorUnhovered )
+    return cloneHSVA( self._choiceNameColorUnhovered )
 end
 
 function MRM:GetChoiceNameColorHovered()
-    return cloneColor( self._choiceNameColorHovered )
+    return cloneHSVA( self._choiceNameColorHovered )
 end
 
 function MRM:GetRadius()
@@ -1108,24 +1108,27 @@ local function lerpFast( frac, from, to )
     return from + ( to - from ) * frac
 end
 
-local function hsvToRGB( hsv )
-    local rgb = HSVToColor( hsv.r, hsv.g, hsv.b )
-    rgb.a = hsv.a
+local function hsvaToRGB( hsva )
+    local rgb = HSVToColor( hsva[1], hsva[2], hsva[3] )
+    rgb.a = hsva[4]
 
     return rgb
 end
 
-local function lerpHSVToHSV( frac, fromHSV, toHSV )
-    local h = lerpFast( frac, fromHSV.r, toHSV.r )
-    local s = lerpFast( frac, fromHSV.g, toHSV.g )
-    local v = lerpFast( frac, fromHSV.b, toHSV.b )
-    local a = lerpFast( frac, fromHSV.a, toHSV.a )
+local function hsvaSplitToRGB( h, s, v, a )
+    local rgb = HSVToColor( h, s, v )
+    rgb.a = a
 
-    return Color( h, s, v, a )
+    return rgb
 end
 
-local function lerpHSVToRGB( frac, fromHSV, toHSV )
-    return hsvToRGB( lerpHSVToHSV( frac, fromHSV, toHSV ) )
+local function lerpHSVAToRGB( frac, fromHSVA, toHSVA )
+    return hsvaSplitToRGB(
+        lerpFast( frac, fromHSVA[1], toHSVA[1] ),
+        lerpFast( frac, fromHSVA[2], toHSVA[2] ),
+        lerpFast( frac, fromHSVA[3], toHSVA[3] ),
+        lerpFast( frac, fromHSVA[4], toHSVA[4] )
+    )
 end
 
 local function makeFont( font, size, weight, antialias, outline, outlineThinness )
@@ -1156,8 +1159,8 @@ destroyedFunc = function( self )
     error( "Invalid " .. ( self.__type or "CUSTOM_OBJECT_INSTANCE" ) )
 end
 
-cloneColor = function( color )
-    return Color( color.r, color.g, color.b, color.a )
+cloneHSVA = function( hsva )
+    return { hsva[1], hsva[2], hsva[3], hsva[4] }
 end
 
 applyVarOverrides = function( menu, overrides )
@@ -1201,12 +1204,12 @@ applyVarOverrides = function( menu, overrides )
 
     menu._choiceGradientEnabled = get( "CHOICE_GRADIENT_ENABLED" )
     menu._choiceBandEnabled = get( "CHOICE_BAND_ENABLED" )
-    menu._choiceGradientColorUnhovered = cloneColor( get( "CHOICE_GRADIENT_COLOR_UNHOVERED" ) )
-    menu._choiceGradientColorHovered = cloneColor( get( "CHOICE_GRADIENT_COLOR_HOVERED" ) )
-    menu._choiceBandColorUnhovered = cloneColor( get( "CHOICE_BAND_COLOR_UNHOVERED" ) )
-    menu._choiceBandColorHovered = cloneColor( get( "CHOICE_BAND_COLOR_HOVERED" ) )
-    menu._choiceNameColorUnhovered = cloneColor( get( "CHOICE_NAME_COLOR_UNHOVERED" ) )
-    menu._choiceNameColorHovered = cloneColor( get( "CHOICE_NAME_COLOR_HOVERED" ) )
+    menu._choiceGradientColorUnhovered = cloneHSVA( get( "CHOICE_GRADIENT_COLOR_UNHOVERED" ) )
+    menu._choiceGradientColorHovered = cloneHSVA( get( "CHOICE_GRADIENT_COLOR_HOVERED" ) )
+    menu._choiceBandColorUnhovered = cloneHSVA( get( "CHOICE_BAND_COLOR_UNHOVERED" ) )
+    menu._choiceBandColorHovered = cloneHSVA( get( "CHOICE_BAND_COLOR_HOVERED" ) )
+    menu._choiceNameColorUnhovered = cloneHSVA( get( "CHOICE_NAME_COLOR_UNHOVERED" ) )
+    menu._choiceNameColorHovered = cloneHSVA( get( "CHOICE_NAME_COLOR_HOVERED" ) )
 
     menu:SetHoverDuration( overrides.HOVER_DURATION )
     menu:SetNameAlign( overrides.NAME_ALIGN )
@@ -1274,23 +1277,23 @@ removePolyUser = function( uid, polyStr )
 end
 
 addColorUser = function( lookup, uid, color1, color2 )
-    local h1 = color1.r
-    local s1 = color1.g
-    local v1 = color1.b
-    local a1 = color1.a
+    local h1 = color1[1]
+    local s1 = color1[2]
+    local v1 = color1[3]
+    local a1 = color1[4]
 
-    local h2 = color2.r
-    local s2 = color2.g
-    local v2 = color2.b
-    local a2 = color2.a
+    local h2 = color2[1]
+    local s2 = color2[2]
+    local v2 = color2[3]
+    local a2 = color2[4]
 
     local colorStr = h1 .. "_" .. s1 .. "_" .. v1 .. "_" .. a1 .. "_" .. h2 .. "_" .. s2 .. "_" .. v2 .. "_" .. a2
     local colorsByFrame = lookup[colorStr]
 
     if not colorsByFrame then
         local same = h1 == h2 and s1 == s2 and v1 == v2 and a1 == a2
-        color1 = same and hsvToRGB( color1 ) or Color( h1, s1, v1, a1 )
-        color2 = same and color1 or Color( h2, s2, v2, a2 )
+        color1 = same and hsvaToRGB( color1 ) or { h1, s1, v1, a1 }
+        color2 = same and color1 or { h2, s2, v2, a2 }
 
         colorsByFrame = {
             users = {},
@@ -1369,7 +1372,7 @@ getColorFrame = function( lookup, colorStr, frameInd )
     local color1 = colorsByFrame.color1
     local color2 = colorsByFrame.color2
 
-    color = lerpHSVToRGB( frac, color1, color2 )
+    color = lerpHSVAToRGB( frac, color1, color2 )
     colorsByFrame[frameInd] = color
 
     return color
@@ -1587,9 +1590,9 @@ makeBlankChoice = function( template, ge, be, gcu, bcu, ncu )
     -- Get visuals, but use the unhovered colors only so the choice doesn't get highlighted.
     local _
     ge, be, gcu, _, bcu, _, ncu, _ = getChoiceVisuals( choice, ge, be, gcu, nil, bcu, nil, ncu, nil )
-    gcu = cloneColor( gcu )
-    bcu = cloneColor( bcu )
-    ncu = cloneColor( ncu )
+    gcu = cloneHSVA( gcu )
+    bcu = cloneHSVA( bcu )
+    ncu = cloneHSVA( ncu )
 
     choice.gradientEnabled = ge
     choice.bandEnabled = be
