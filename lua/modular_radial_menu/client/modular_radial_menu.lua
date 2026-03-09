@@ -1110,7 +1110,7 @@ end
 
 local function hsvaToRGB( hsva )
     local rgb = HSVToColor( hsva[1], hsva[2], hsva[3] )
-    rgb.a = hsva[4]
+    rgb.a = hsva[4] or 255
 
     return rgb
 end
@@ -1160,7 +1160,7 @@ destroyedFunc = function( self )
 end
 
 cloneHSVA = function( hsva )
-    return { hsva[1], hsva[2], hsva[3], hsva[4] }
+    return { hsva[1], hsva[2], hsva[3], hsva[4] or 255 }
 end
 
 applyVarOverrides = function( menu, overrides )
@@ -1280,12 +1280,12 @@ addColorUser = function( lookup, uid, color1, color2 )
     local h1 = color1[1]
     local s1 = color1[2]
     local v1 = color1[3]
-    local a1 = color1[4]
+    local a1 = color1[4] or 255
 
     local h2 = color2[1]
     local s2 = color2[2]
     local v2 = color2[3]
-    local a2 = color2[4]
+    local a2 = color2[4] or 255
 
     local colorStr = h1 .. "_" .. s1 .. "_" .. v1 .. "_" .. a1 .. "_" .. h2 .. "_" .. s2 .. "_" .. v2 .. "_" .. a2
     local colorsByFrame = lookup[colorStr]
