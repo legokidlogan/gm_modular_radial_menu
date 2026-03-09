@@ -1171,7 +1171,6 @@ applyVarOverrides = function( menu, overrides )
         return VARIABLE_DEFAULTS[varName]
     end
 
-
     local fontOutlineThinness = get( "FONT_OUTLINE_THINNESS" )
     local fontStr, fontHeight, fontSize = makeFont( get( "FONT" ), get( "FONT_SIZE" ), get( "FONT_WEIGHT" ), get( "FONT_ANTIALIAS" ), get( "FONT_OUTLINE" ), fontOutlineThinness )
     menu._fontStr = fontStr
