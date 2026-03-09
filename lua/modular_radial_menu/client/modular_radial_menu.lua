@@ -247,6 +247,42 @@ function MRM.MakeBlankChoice( menu, template )
     )
 end
 
+--[[
+    - Adds blank choices to a page descriptor until it has a minimum number of choices.
+    - Useful for auto-filling pages with less than three choices or ensuring a page has a fixed number of choices.
+    - Modifies page and returns it.
+    - This should be used in conjunction with ModularRadialMenu.New() or page-editing functions. 
+
+    page: table
+        - A page descriptor, as seen in ModularRadialMenu.New().
+        - Will be modified.
+    targetChoiceCount: number
+        - The minimum number of choices the page should have after adding blanks.
+    blankChoice: (optional) table
+        - The blanke choice descriptor to use.
+        - If nil, will use a generic one from the class defaults.
+--]]
+function MRM.FillPageWithBlanks( page, targetChoiceCount, blankChoice )
+    blankChoice = blankChoice or MRM.MakeBlankChoice()
+
+    for i = #page + 1, targetChoiceCount do
+        page[i] = blankChoice
+    end
+
+    return page
+end
+
+-- Identical to ModularRadialMenu.FillPageWithBlanks(), but applies to a list of page descriptors.
+function MRM.FillPagesWithBlanks( pages, targetChoiceCount, blankChoice )
+    blankChoice = blankChoice or MRM.MakeBlankChoice()
+
+    for _, page in ipairs( pages ) do
+        MRM.FillPageWithBlanks( page, targetChoiceCount, blankChoice )
+    end
+
+    return pages
+end
+
 function MRM.GetMenuByName( name )
     return menusByName[name]
 end
