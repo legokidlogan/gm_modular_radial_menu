@@ -798,8 +798,6 @@ end
 function MRM:InsertChoice( pageInd, choiceInd, choice )
     if type( pageInd ) ~= "number" then error( "Expected pageInd to be a number" ) end
     if math.floor( pageInd ) ~= pageInd then error( "Expected pageInd to be an integer" ) end
-    if type( choiceInd ) ~= "number" then error( "Expected choiceInd to be a number" ) end
-    if math.floor( choiceInd ) ~= choiceInd then error( "Expected choiceInd to be an integer" ) end
     if type( choice ) ~= "table" then error( "Expected choice to be a table" ) end
     if type( choice.name ) ~= "string" then error( "Expected choice name to be a string" ) end
 
@@ -810,6 +808,10 @@ function MRM:InsertChoice( pageInd, choiceInd, choice )
 
     local page = realPages[pageInd]
     local choiceCount = #page
+    if choiceInd == nil then choiceInd = choiceCount + 1 end
+    if type( choiceInd ) ~= "number" then error( "Expected choiceInd to be a number or nil" ) end
+    if math.floor( choiceInd ) ~= choiceInd then error( "Expected choiceInd to be an integer" ) end
+
     if choiceInd < 1 or choiceInd > choiceCount + 1 then
         error( "Expected choiceInd to be between 1 and choiceCount + 1" )
     end
