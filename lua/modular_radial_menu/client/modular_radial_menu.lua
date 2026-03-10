@@ -72,6 +72,8 @@ local PAGE_FONT_SIZE = 24 / 1080
 local CHOICE_FRAME_COUNT = 100
 
 local MATH_PI = math.pi
+local MATH_PI_HALF = MATH_PI / 2
+local MATH_PI_DOUBLE = MATH_PI * 2
 local MAIN_FONT_SIZE_EFF = MAIN_FONT_SIZE * ScrH()
 local PAGE_FONT_SIZE_EFF = PAGE_FONT_SIZE * ScrH()
 local VECTOR_MENU_NAME_SCALE = uniformVector( 1 / MAIN_FONT_OUTLINE_THINNESS )
@@ -1220,15 +1222,14 @@ addPolyUser = function( uid, radiusHovered, radiusUnhovered, radiusInnerUnhovere
     local polySetsByFrame = choicePolySetsLookup[polyStr]
 
     if not polySetsByFrame then
-        local menuCircumference = 2 * MATH_PI * radiusHovered
+        local menuCircumference = MATH_PI_DOUBLE * radiusHovered
         local choiceArc = ( menuCircumference / choiceCount ) - radiusHovered * choiceGap
         local choiceRadHalf = choiceArc / ( radiusHovered * 2 )
 
-        local rad90 = MATH_PI / 2
-        local dirRightX = math.cos( rad90 - choiceRadHalf )
-        local dirRightY = -math.sin( rad90 - choiceRadHalf )
-        local dirLeftX = math.cos( rad90 + choiceRadHalf )
-        local dirLeftY = -math.sin( rad90 + choiceRadHalf )
+        local dirRightX = math.cos( MATH_PI_HALF - choiceRadHalf )
+        local dirRightY = -math.sin( MATH_PI_HALF - choiceRadHalf )
+        local dirLeftX = math.cos( MATH_PI_HALF + choiceRadHalf )
+        local dirLeftY = -math.sin( MATH_PI_HALF + choiceRadHalf )
         local inscribeMult = math.cos( MATH_PI / choiceCount ) -- Accounts for name radius loss due to inscribing the circle.
 
         polySetsByFrame = {
@@ -1749,7 +1750,7 @@ hook.Add( "HUDPaint", "ModularRadialMenu_DrawCurrentMenu", function()
     local choiceGradientPolys = polySetsByFrame.gradientPolys
     local choiceBandPolys = polySetsByFrame.bandPolys
     local choiceNameRadii = polySetsByFrame.nameRadii
-    local arcWidthMult = math.pi * 2 / #curPage
+    local arcWidthMult = MATH_PI_DOUBLE / #curPage
 
     local menuFont = curMenu._fontStr
     local menuFontVecScale = curMenu._fontVecScale
@@ -1934,14 +1935,12 @@ hook.Add( "Think", "ModularRadialMenu_TrackMouse", function()
         return
     end
 
-    local rad = math.asin( y / radius )
+    local rad = math.asin( y / radius ) + MATH_PI_HALF
     local choiceCount = curMenu:GetCurPageChoiceCount()
-    local radPerChoice = 2 * MATH_PI / choiceCount
-
-    rad = rad + MATH_PI / 2
+    local radPerChoice = MATH_PI_DOUBLE / choiceCount
 
     if x < 0 then
-        rad = 2 * MATH_PI - rad
+        rad = MATH_PI_DOUBLE - rad
     end
 
     local nearestMult = nearestMultiple( rad, radPerChoice )
